@@ -1,0 +1,32 @@
+# MediaPlugin - קובץ הגדרות
+
+messages:
+  no-permission: "&cאין לך גישה לפאנל המדיה. פנה לאדמין."
+  no-access-item: "&cאין לך הרשאה לאפשרות הזו."
+  live-on: "&c&l⚫ LIVE &f%player% &7עלה עכשיו לשידור חי! %link%"
+  live-off: "&7%player% &fסיים/ה את השידור החי."
+  giveaway-prompt: "&aכתוב עכשיו בצ'אט את הודעת ההגרלה (או כתוב 'cancel' לביטול):"
+  giveaway-broadcast: "&e&l🎉 הגרלה מאת %player%&7: &f%message%"
+  broadcast-prompt: "&aכתוב עכשיו בצ'אט את ההודעה שתשודר לכל השרת (או 'cancel' לביטול):"
+  broadcast-format: "&b&l📢 %player% &7» &f%message%"
+  setlink-usage: "&cשימוש: /media setlink <קישור>"
+  setlink-success: "&aהקישור שלך עודכן ל: &f%link%"
+  vanish-on: "&7נכנסת למצב וניש (בלתי נראה)."
+  vanish-off: "&7יצאת ממצב וניש."
+  fly-on: "&aמצב טיסה הופעל."
+  fly-off: "&7מצב טיסה כובה."
+  healed: "&aהחיים והרעב שלך מולאו במלואם."
+  weather-cleared: "&aמזג האוויר נוקה."
+  time-set: "&aהזמן שונה ליום."
+  god-on: "&aמצב אלמוות הופעל."
+  god-off: "&7מצב אלמוות כובה."
+  recording-on: "&aמצב הקלטה הופעל - הצ'אט נוקה והודעות כניסה/יציאה מוסתרות עבורך."
+  recording-off: "&7מצב הקלטה כובה."
+  admin-added: "&a%player% נוסף/ה לרשימת היוטיוברים."
+  admin-removed: "&c%player% הוסר/ה מרשימת היוטיוברים."
+  admin-not-found: "&cהשחקן חייב להתחבר לפחות פעם אחת כדי להוסיף אותו."
+  admin-list-header: "&b&lרשימת יוטיוברים:"
+  admin-usage: "&cשימוש: /media <add|remove|list|setlink> [שם/קישור]"
+
+gui:
+  title: "&b&l✦ Media Panel ✦"

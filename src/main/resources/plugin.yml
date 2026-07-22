@@ -1,0 +1,49 @@
+name: MediaPlugin
+version: '${project.version}'
+main: com.mediaplugin.MediaPlugin
+api-version: '1.20'
+author: MediaPlugin
+description: Panel ניהול ליוטיוברים/סטרימרים בשרת - פקודת /media עם GUI מלא הרשאות.
+
+commands:
+  media:
+    description: פותח את פאנל המדיה
+    usage: /media [add|remove|list|setlink] [player] [url]
+
+permissions:
+  media.use:
+    description: גישה בסיסית לפתיחת /media
+    default: op
+  media.live:
+    description: הרשאה להכריז על סטטוס לייב
+    default: op
+  media.giveaway:
+    description: הרשאה להכריז על הגרלה
+    default: op
+  media.vanish:
+    description: הרשאה למצב וניש
+    default: op
+  media.fly:
+    description: הרשאה לטוס
+    default: op
+  media.heal:
+    description: הרשאה לרפא/להאכיל את עצמם
+    default: op
+  media.weather:
+    description: הרשאה לנקות מזג אוויר
+    default: op
+  media.time:
+    description: הרשאה לשנות זמן ליום
+    default: op
+  media.god:
+    description: הרשאה למצב אלמוות
+    default: op
+  media.broadcast:
+    description: הרשאה לשדר הודעה כללית לשרת
+    default: op
+  media.recording:
+    description: הרשאה למצב הקלטה (ניקוי צאט/לא להראות כניסות-יציאות)
+    default: op
+  media.admin:
+    description: ניהול רשימת היוטיוברים (add/remove/list)
+    default: op
