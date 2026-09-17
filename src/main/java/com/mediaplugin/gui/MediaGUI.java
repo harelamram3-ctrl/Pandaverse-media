@@ -1,6 +1,6 @@
 package com.mediaplugin.gui;
 
-import com.mediaplugin.MediaPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,117 +8,74 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.Arrays;
 
 public class MediaGUI {
 
-    // מפתחות הסלוטים - נשמרים כדי שה-Listener ידע על מה לחצו
-    public static final String NBT_KEY = "media_action";
+    public static void openGUI(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_BLUE + "" + ChatColor.BOLD + "Pandaverse Media Hub");
 
-    private final MediaPlugin plugin;
-
-    public MediaGUI(MediaPlugin plugin) {
-        this.plugin = plugin;
-    }
-
-    public Inventory build(Player player) {
-        Inventory inv = org.bukkit.Bukkit.createInventory(null, 27, plugin.guiTitle());
-        UUID uuid = player.getUniqueId();
-
-        inv.setItem(10, item(Material.REDSTONE_BLOCK,
-                plugin.getDataManager().liveSet().contains(uuid) ? "&c&l⚫ אני בלייב! (פעיל)" : "&c&l⚫ אני בלייב!",
-                List.of("&7לחץ כדי להכריז לכל השרת", "&7שאתה עולה/יורד משידור חי"),
-                MediaAction.TOGGLE_LIVE, "media.live", player));
-
-        inv.setItem(11, item(Material.NETHER_STAR,
-                "&e&l🎉 הודעת הגרלה",
-                List.of("&7לחץ כדי לכתוב הודעת הגרלה", "&7שתשודר לכל השרת"),
-                MediaAction.GIVEAWAY, "media.giveaway", player));
-
-        inv.setItem(12, item(Material.ENDER_EYE,
-                plugin.getDataManager().vanishSet().contains(uuid) ? "&8&l👁 וניש (פעיל)" : "&8&l👁 וניש",
-                List.of("&7הפוך לבלתי נראה לשחקנים אחרים"),
-                MediaAction.TOGGLE_VANISH, "media.vanish", player));
-
-        inv.setItem(13, item(Material.FEATHER,
-                plugin.getDataManager().flySet().contains(uuid) ? "&b&l🕊 טיסה (פעיל)" : "&b&l🕊 טיסה",
-                List.of("&7הפעל/כבה מצב טיסה"),
-                MediaAction.TOGGLE_FLY, "media.fly", player));
-
-        inv.setItem(14, item(Material.GOLDEN_APPLE,
-                "&a&l❤ מילוי חיים ורעב",
-                List.of("&7מלא לעצמך חיים ורעב במלואם", "&7- מושלם לפני שידור"),
-                MediaAction.HEAL, "media.heal", player));
-
-        inv.setItem(15, item(Material.SUNFLOWER,
-                "&e&l☀ נקה מזג אוויר",
-                List.of("&7מנקה גשם/סערה - תאורה טובה יותר לצילום"),
-                MediaAction.WEATHER, "media.weather", player));
-
-        inv.setItem(16, item(Material.CLOCK,
-                "&e&l🕐 קבע זמן ליום",
-                List.of("&7משנה את הזמן ליום מיידית"),
-                MediaAction.TIME, "media.time", player));
-
-        inv.setItem(19, item(Material.TOTEM_OF_UNDYING,
-                plugin.getDataManager().godSet().contains(uuid) ? "&d&l✦ אלמוות (פעיל)" : "&d&l✦ אלמוות",
-                List.of("&7מצב חסין נזק - לא תמות בשידור"),
-                MediaAction.TOGGLE_GOD, "media.god", player));
-
-        inv.setItem(20, item(Material.PAPER,
-                "&b&l📢 שדר הודעה לשרת",
-                List.of("&7כתוב הודעה מעוצבת", "&7שתישלח לכל השחקנים בשרת"),
-                MediaAction.BROADCAST, "media.broadcast", player));
-
-        inv.setItem(21, item(Material.RED_DYE,
-                plugin.getDataManager().recordingSet().contains(uuid) ? "&c&l🎥 מצב הקלטה (פעיל)" : "&c&l🎥 מצב הקלטה",
-                List.of("&7מנקה את הצ'אט שלך", "&7ומסתיר הודעות כניסה/יציאה", "&7- נקי יותר להקלטה"),
-                MediaAction.TOGGLE_RECORDING, "media.recording", player));
-
-        inv.setItem(22, item(Material.NAME_TAG,
-                "&f&l🔗 עדכן קישור שידור",
-                List.of("&7הקלד: /media setlink <קישור>", "&7הקישור יופיע בהודעת ה'לייב' שלך"),
-                MediaAction.INFO_ONLY, "media.live", player));
-
-        inv.setItem(26, item(Material.BARRIER, "&c&lסגור", List.of(), MediaAction.CLOSE, null, player));
-
-        return inv;
-    }
-
-    private ItemStack item(Material mat, String name, List<String> loreLines, MediaAction action, String permNode, Player player) {
-        boolean hasAccess = permNode == null || plugin.hasAccess(player, permNode);
-
-        ItemStack stack;
-        try {
-            stack = new ItemStack(hasAccess ? mat : Material.GRAY_DYE);
-        } catch (Exception e) {
-            stack = new ItemStack(hasAccess ? Material.PAPER : Material.GRAY_DYE);
+        // 1. כפתור הכרזה על לייב (רצועה 10)
+        if (player.hasPermission("media.live")) {
+            gui.setItem(10, createGuiItem(Material.RED_WOOL, "&c&lהכרזת לייב", "&7לחץ כדי להכריז על לייב פעיל בשרת!"));
         }
 
-        ItemMeta meta = stack.getItemMeta();
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', hasAccess ? name : "&7" + ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', name))));
-
-        List<String> lore = new ArrayList<>();
-        if (hasAccess) {
-            for (String l : loreLines) lore.add(ChatColor.translateAlternateColorCodes('&', l));
-        } else {
-            lore.add(ChatColor.translateAlternateColorCodes('&', plugin.msg("no-access-item")));
+        // 2. כפתור הגרלה (רצועה 11)
+        if (player.hasPermission("media.giveaway")) {
+            gui.setItem(11, createGuiItem(Material.GOLD_BLOCK, "&e&lהכרזת הגרלה", "&7לחץ כדי להכריז על הגרלה חדשה לצופים."));
         }
-        meta.setLore(lore);
 
-        meta.getPersistentDataContainer().set(
-                new org.bukkit.NamespacedKey(plugin, NBT_KEY),
-                org.bukkit.persistence.PersistentDataType.STRING,
-                hasAccess ? action.name() : MediaAction.NONE.name());
+        // 3. מצב היעלמות - Vanish (רצועה 12)
+        if (player.hasPermission("media.vanish")) {
+            gui.setItem(12, createGuiItem(Material.POTION, "&5&lמצב היעלמות (Vanish)", "&7הפעל/כבה מצב וניש לצורך צילום נקי."));
+        }
 
-        stack.setItemMeta(meta);
-        return stack;
+        // 4. מצב טיסה - Fly (רצועה 13)
+        if (player.hasPermission("media.fly")) {
+            gui.setItem(13, createGuiItem(Material.FEATHER, "&b&lהפעלת טיסה", "&7ריחוף נוח לצילומי מסך וסרטונים."));
+        }
+
+        // 5. ריפוי והאכלה - Heal (רצועה 14)
+        if (player.hasPermission("media.heal")) {
+            gui.setItem(14, createGuiItem(Material.GOLDEN_APPLE, "&d&lרפואה מלאה והאכלה", "&7מלא חיים ושובע ברגע."));
+        }
+
+        // 6. ניקוי מזג אוויר (רצועה 15)
+        if (player.hasPermission("media.weather")) {
+            gui.setItem(15, createGuiItem(Material.SUNFLOWER, "&6&lשמש תמיד", "&7נקה את מזג האוויר ושמור על שמיים בהירים."));
+        }
+
+        // 7. שсет ליום (רצועה 16)
+        if (player.hasPermission("media.time")) {
+            gui.setItem(16, createGuiItem(Material.CLOCK, "&e&lקבע שעה ליום", "&7שеר זמנים ליום שמש מושלם לצילום."));
+        }
+
+        // 8. מצב אלמוות - God (רצועה 19)
+        if (player.hasPermission("media.god")) {
+            gui.setItem(19, createGuiItem(Material.NETHER_STAR, "&4&lמצב אלמוות (God)", "&7הגן על עצמך מפני נזק בזמן צילום."));
+        }
+
+        // 9. שידור הודעה כללית (רצועה 20)
+        if (player.hasPermission("media.broadcast")) {
+            gui.setItem(20, createGuiItem(Material.WRITABLE_BOOK, "&9&lשידור הודעה לשרת", "&7שלח הכרזה מיוחדת לכל הצופים בשרת."));
+        }
+
+        // 10. מצב הקלטה מיוחד (רצועה 21)
+        if (player.hasPermission("media.recording")) {
+            gui.setItem(21, createGuiItem(Material.ENDER_EYE, "&3&lמצב הקלטה נקי", "&7הסתרת כניסות/יציאות וניקוי צ'אט מהיר."));
+        }
+
+        player.openInventory(gui);
     }
 
-    public enum MediaAction {
-        TOGGLE_LIVE, GIVEAWAY, TOGGLE_VANISH, TOGGLE_FLY, HEAL, WEATHER, TIME,
-        TOGGLE_GOD, BROADCAST, TOGGLE_RECORDING, INFO_ONLY, CLOSE, NONE
+    private static ItemStack createGuiItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+            meta.setLore(Arrays.asList(Arrays.stream(lore).map(s -> ChatColor.translateAlternateColorCodes('&', s)).toArray(String[]::new)));
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 }
