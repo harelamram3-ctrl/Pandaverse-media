@@ -1,13 +1,13 @@
-name: MediaPlugin
+name: PandaverseMedia
 version: '${project.version}'
 main: com.mediaplugin.MediaPlugin
 api-version: '1.20'
-author: MediaPlugin
-description: Panel ניהול ליוטיוברים/סטרימרים בשרת - פקודת /media עם GUI מלא הרשאות.
+author: Pandaverse
+description: פאנל ניהול מתקדם ליוטיוברים וסטרימרים בשרת Pandaverse - פקודת /media עם GUI מלא והרשאות.
 
 commands:
   media:
-    description: פותח את פאנל המדיה
+    description: פותח את פאנל המדיה של Pandaverse
     usage: /media [add|remove|list|setlink] [player] [url]
 
 permissions:
