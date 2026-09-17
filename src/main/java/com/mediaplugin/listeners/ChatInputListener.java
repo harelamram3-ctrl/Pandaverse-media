@@ -14,7 +14,7 @@ public class ChatInputListener implements Listener {
     }
 
     @EventHandler
-    public onChat(AsyncPlayerChatEvent event) {
+    public void onChat(AsyncPlayerChatEvent event) {
         // לוגיקת צ'אט במידת הצורך
     }
 }
