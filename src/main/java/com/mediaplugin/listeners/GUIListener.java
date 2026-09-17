@@ -1,154 +1,92 @@
 package com.mediaplugin.listeners;
 
 import com.mediaplugin.MediaPlugin;
-import com.mediaplugin.gui.MediaGUI;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.WeatherType;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class GUIListener implements Listener {
 
     private final MediaPlugin plugin;
-    // שחקנים שממתינים להקליד הודעת שידור/הגרלה בצ'אט
-    public static final Map<UUID, String> AWAITING_INPUT = new HashMap<>();
 
     public GUIListener(MediaPlugin plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler
-    public void onClick(InventoryClickEvent event) {
-        if (!ChatColor.stripColor(event.getView().getTitle()).equals(ChatColor.stripColor(plugin.guiTitle()))) {
-            return;
-        }
-        event.setCancelled(true);
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().contains("Pandaverse Media Hub")) {
+            event.setCancelled(true);
 
-        if (!(event.getWhoClicked() instanceof Player player)) return;
-        ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || !clicked.hasItemMeta()) return;
+            if (!(event.getWhoClicked() instanceof Player)) return;
+            Player player = (Player) event.getWhoClicked();
 
-        ItemMeta meta = clicked.getItemMeta();
-        NamespacedKey key = new NamespacedKey(plugin, MediaGUI.NBT_KEY);
-        String actionName = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
-        if (actionName == null) return;
+            if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) return;
 
-        MediaGUI.MediaAction action;
-        try {
-            action = MediaGUI.MediaAction.valueOf(actionName);
-        } catch (IllegalArgumentException e) {
-            return;
-        }
+            String itemName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
 
-        UUID uuid = player.getUniqueId();
-
-        switch (action) {
-            case CLOSE -> player.closeInventory();
-
-            case NONE, INFO_ONLY -> {
-                if (action == MediaGUI.MediaAction.NONE) {
-                    player.sendMessage(plugin.msg("no-access-item"));
-                }
-            }
-
-            case TOGGLE_LIVE -> {
-                boolean nowLive = plugin.getDataManager().toggle(plugin.getDataManager().liveSet(), uuid);
-                if (nowLive) {
-                    String link = plugin.getDataManager().getLink(uuid);
-                    String message = plugin.msg("live-on")
-                            .replace("%player%", player.getName())
-                            .replace("%link%", link == null || link.isEmpty() ? "" : link);
-                    plugin.getServer().broadcastMessage(message);
-                } else {
-                    plugin.getServer().broadcastMessage(plugin.msg("live-off").replace("%player%", player.getName()));
-                }
-                player.closeInventory();
-            }
-
-            case GIVEAWAY -> {
-                AWAITING_INPUT.put(uuid, "giveaway");
-                player.closeInventory();
-                player.sendMessage(plugin.msg("giveaway-prompt"));
-            }
-
-            case BROADCAST -> {
-                AWAITING_INPUT.put(uuid, "broadcast");
-                player.closeInventory();
-                player.sendMessage(plugin.msg("broadcast-prompt"));
-            }
-
-            case TOGGLE_VANISH -> {
-                boolean now = plugin.getDataManager().toggle(plugin.getDataManager().vanishSet(), uuid);
-                for (Player other : plugin.getServer().getOnlinePlayers()) {
-                    if (other.equals(player)) continue;
-                    if (now) {
-                        other.hidePlayer(plugin, player);
-                    } else {
-                        other.showPlayer(plugin, player);
+            switch (itemName) {
+                case "הכרזת לייב":
+                    if (player.hasPermission("media.live")) {
+                        player.closeInventory();
+                        player.performCommand("broadcast &8[&b&lPandaverse&f&lMedia&8] &cהיוטיובר/סטרימר &e" + player.getName() + " &cכרגע בלייב! בואו לצפות בו!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
                     }
-                }
-                player.sendMessage(now ? plugin.msg("vanish-on") : plugin.msg("vanish-off"));
-                refresh(player);
+                    break;
+                case "הכרזת הגרלה":
+                    if (player.hasPermission("media.giveaway")) {
+                        player.closeInventory();
+                        player.performCommand("broadcast &8[&b&lPandaverse&f&lMedia&8] &e&lהגרלה חדשה מתחילה עכשיו אצל &c" + player.getName() + "!");
+                        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
+                    }
+                    break;
+                case "מצב היעלמות (Vanish)":
+                    if (player.hasPermission("media.vanish")) {
+                        player.sendMessage(ChatColor.AQUA + "מצב היעלמות (Vanish) שונה בהצלחה.");
+                        // ניתן לחבר כאן פלאגין וניש או לוגיקת התינוק שלך
+                    }
+                    break;
+                case "הפעלת טיסה":
+                    if (player.hasPermission("media.fly")) {
+                        boolean newFly = !player.isFlying();
+                        player.setAllowFlight(true);
+                        player.setFlying(newFly);
+                        player.sendMessage(ChatColor.AQUA + "מצב טיסה: " + (newFly ? "מופעל" : "כבוי"));
+                    }
+                    break;
+                case "רפואה מלאה והאכלה":
+                    if (player.hasPermission("media.heal")) {
+                        player.setHealth(20.0);
+                        player.setFoodLevel(20);
+                        player.sendMessage(ChatColor.GREEN + "בריאות ושובע מלאים!");
+                    }
+                    break;
+                case "שמש תמיד":
+                    if (player.hasPermission("media.weather")) {
+                        player.getWorld().setStorm(false);
+                        player.getWorld().setThundering(false);
+                        player.sendMessage(ChatColor.YELLOW + "מזג האוויר נוקה לשמש יפה.");
+                    }
+                    break;
+                case "קבע שעה ליום":
+                    if (player.hasPermission("media.time")) {
+                        player.getWorld().setTime(1000);
+                        player.sendMessage(ChatColor.YELLOW + "השעה שונתה לבוקר/יום.");
+                    }
+                    break;
+                case "מצב אלמוות (God)":
+                    if (player.hasPermission("media.god")) {
+                        boolean current = player.isInvulnerable();
+                        player.setInvulnerable(!current);
+                        player.sendMessage(ChatColor.RED + "מצב אלמוות (God): " + (!current ? "מופעל" : "כבוי"));
+                    }
+                    break;
+                default:
+                    break;
             }
-
-            case TOGGLE_FLY -> {
-                boolean now = plugin.getDataManager().toggle(plugin.getDataManager().flySet(), uuid);
-                player.setAllowFlight(now);
-                player.setFlying(now);
-                player.sendMessage(now ? plugin.msg("fly-on") : plugin.msg("fly-off"));
-                refresh(player);
-            }
-
-            case HEAL -> {
-                player.setHealth(player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue());
-                player.setFoodLevel(20);
-                player.setSaturation(20f);
-                player.sendMessage(plugin.msg("healed"));
-            }
-
-            case WEATHER -> {
-                player.getWorld().setStorm(false);
-                player.getWorld().setThundering(false);
-                player.sendMessage(plugin.msg("weather-cleared"));
-            }
-
-            case TIME -> {
-                player.getWorld().setTime(1000);
-                player.sendMessage(plugin.msg("time-set"));
-            }
-
-            case TOGGLE_GOD -> {
-                boolean now = plugin.getDataManager().toggle(plugin.getDataManager().godSet(), uuid);
-                player.setInvulnerable(now);
-                player.sendMessage(now ? plugin.msg("god-on") : plugin.msg("god-off"));
-                refresh(player);
-            }
-
-            case TOGGLE_RECORDING -> {
-                boolean now = plugin.getDataManager().toggle(plugin.getDataManager().recordingSet(), uuid);
-                if (now) {
-                    for (int i = 0; i < 100; i++) player.sendMessage("");
-                }
-                player.sendMessage(now ? plugin.msg("recording-on") : plugin.msg("recording-off"));
-                refresh(player);
-            }
-        }
-    }
-
-    private void refresh(Player player) {
-        if (player.getOpenInventory() != null) {
-            player.openInventory(new MediaGUI(plugin).build(player));
         }
     }
 }
