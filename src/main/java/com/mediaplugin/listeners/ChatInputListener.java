@@ -1,7 +1,6 @@
 package com.mediaplugin.listeners;
 
 import com.mediaplugin.MediaPlugin;
-import org.event.Event; // Placeholder
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -15,7 +14,7 @@ public class ChatInputListener implements Listener {
     }
 
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
-        // לוגיקת צ'אט במידת הצורך עבור מצב הקלטה / הזנת קישורים דינמית
+    public onChat(AsyncPlayerChatEvent event) {
+        // לוגיקת צ'אט במידת הצורך
     }
 }
