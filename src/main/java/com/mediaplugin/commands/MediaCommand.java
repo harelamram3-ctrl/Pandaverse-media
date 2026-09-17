@@ -3,18 +3,14 @@ package com.mediaplugin.commands;
 import com.mediaplugin.MediaPlugin;
 import com.mediaplugin.gui.MediaGUI;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-public class MediaCommand implements CommandExecutor, TabCompleter {
+public class MediaCommand implements CommandExecutor {
 
     private final MediaPlugin plugin;
 
@@ -24,101 +20,70 @@ public class MediaCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
-        if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage("פקודה זו זמינה רק לשחקנים.");
-                return true;
-            }
-            if (!plugin.hasAccess(player, "media.use")) {
-                player.sendMessage(plugin.msg("no-permission"));
-                return true;
-            }
-            player.openInventory(new MediaGUI(plugin).build(player));
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("הפקודה הזו ניתנת לביצוע רק במשחק על ידי שחקן.");
             return true;
         }
 
-        String sub = args[0].toLowerCase();
+        Player player = (Player) sender;
 
-        switch (sub) {
-            case "add" -> {
-                if (!sender.hasPermission("media.admin") && !sender.isOp()) {
-                    sender.sendMessage(plugin.msg("no-permission"));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(plugin.msg("admin-usage"));
-                    return true;
-                }
-                OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-                if (target == null || (!target.hasPlayedBefore() && !target.isOnline())) {
-                    sender.sendMessage(plugin.msg("admin-not-found"));
-                    return true;
-                }
-                plugin.getDataManager().addYoutuber(target.getUniqueId());
-                sender.sendMessage(plugin.msg("admin-added").replace("%player%", args[1]));
-                return true;
-            }
-            case "remove" -> {
-                if (!sender.hasPermission("media.admin") && !sender.isOp()) {
-                    sender.sendMessage(plugin.msg("no-permission"));
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(plugin.msg("admin-usage"));
-                    return true;
-                }
-                OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-                plugin.getDataManager().removeYoutuber(target.getUniqueId());
-                sender.sendMessage(plugin.msg("admin-removed").replace("%player%", args[1]));
-                return true;
-            }
-            case "list" -> {
-                if (!sender.hasPermission("media.admin") && !sender.isOp()) {
-                    sender.sendMessage(plugin.msg("no-permission"));
-                    return true;
-                }
-                sender.sendMessage(plugin.msg("admin-list-header"));
-                for (UUID uuid : plugin.getDataManager().getYoutubers()) {
-                    OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
-                    sender.sendMessage(" - " + (p.getName() == null ? uuid.toString() : p.getName()));
-                }
-                return true;
-            }
-            case "setlink" -> {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage("פקודה זו זמינה רק לשחקנים.");
-                    return true;
-                }
-                if (!plugin.hasAccess(player, "media.live")) {
-                    player.sendMessage(plugin.msg("no-permission"));
-                    return true;
-                }
-                if (args.length < 2) {
-                    player.sendMessage(plugin.msg("setlink-usage"));
-                    return true;
-                }
-                plugin.getDataManager().setLink(player.getUniqueId(), args[1]);
-                player.sendMessage(plugin.msg("setlink-success").replace("%link%", args[1]));
-                return true;
-            }
-            default -> {
-                sender.sendMessage(plugin.msg("admin-usage"));
-                return true;
-            }
+        if (!player.hasPermission("media.use")) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&b&lPandaverse&f&lMedia&8] &cאין לך הרשאה להשתמש בפקודה זו!"));
+            return true;
         }
-    }
 
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            return List.of("add", "remove", "list", "setlink");
+        if (args.length == 0) {
+            MediaGUI.openGUI(player);
+            return true;
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove"))) {
-            List<String> names = new ArrayList<>();
-            for (Player p : Bukkit.getOnlinePlayers()) names.add(p.getName());
-            return names;
+
+        // ניהול מנהלים (Admin Commands)
+        if (args[0].equalsIgnoreCase("add")) {
+            if (!player.hasPermission("media.admin")) {
+                player.sendMessage(ChatColor.RED + "אין לך הרשאה לנהל חברי מדיה.");
+                return true;
+            }
+            if (args.length < 2) {
+                player.sendMessage(ChatColor.YELLOW + "שימוש: /media add [שחקן]");
+                return true;
+            }
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+            plugin.getDataManager().addMediaMember(target.getUniqueId(), target.getName() != null ? target.getName() : "Unknown");
+            player.sendMessage(ChatColor.GREEN + "השחקן " + target.getName() + " נוסף בהצלחה לרשימת המדיה של Pandaverse!");
+            return true;
         }
-        return new ArrayList<>();
+
+        if (args[0].equalsIgnoreCase("remove")) {
+            if (!player.hasPermission("media.admin")) {
+                player.sendMessage(ChatColor.RED + "אין לך הרשאה לנהל חברי מדיה.");
+                return true;
+            }
+            if (args.length < 2) {
+                player.sendMessage(ChatColor.YELLOW + "שימוש: /media remove [שחקן]");
+                return true;
+            }
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+            plugin.getDataManager().removeMediaMember(target.getUniqueId());
+            player.sendMessage(ChatColor.RED + "השחקן " + target.getName() + " הוסר מרשימת המדיה.");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("setlink")) {
+            if (args.length < 2) {
+                player.sendMessage(ChatColor.YELLOW + "שימוש: /media setlink [קישור]");
+                return true;
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                sb.append(args[i]).append(" ");
+            }
+            String link = sb.toString().trim();
+            plugin.getDataManager().setPlayerLink(player.getUniqueId(), link);
+            player.sendMessage(ChatColor.AQUA + "הקישור שלך לערוץ/לייב עודכן בהצלחה ל: " + ChatColor.WHITE + link);
+            return true;
+        }
+
+        MediaGUI.openGUI(player);
+        return true;
     }
 }
